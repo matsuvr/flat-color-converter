@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flat Color Filter</title>
+  <style>
+    body { font-family: sans-serif; margin: 1rem; }
+    canvas { border: 1px solid #ccc; max-width: 100%; }
+    .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 1rem; margin-top: 1rem; }
+    .control-group { border: 1px solid #eee; padding: .5rem; border-radius: 4px; }
+    .control-group h4 { margin: .2rem 0 .5rem; font-size: 1rem; }
+    label { display: block; font-size: .9rem; margin-top: .5rem; }
+    input[type=range] { width: 100%; }
+    .dropzone { 
+      position: relative; 
+      border: 2px dashed #ccc; 
+      border-radius: 4px; 
+      padding: 20px; 
+      text-align: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .dropzone.dragover { 
+      background-color: rgba(0,0,0,0.05); 
+      border-color: #999; 
+    }
+    .loader {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(0,0,0,0.1);
+      border-radius: 50%;
+      border-top: 4px solid #3498db;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    .download-btn {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .download-btn:hover {
+      background-color: #45a049;
+    }
+    .canvas-container {
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+  <h1>Flat Color Filter Demo</h1>
+  <p>画像をアップロードし、HSV／RGBモードのパラメータをスライダーで調整できます。画像は「元画像」エリアにドラッグ＆ドロップでも読み込めます。</p>
+
+  <input type="file" id="inputFile" accept="image/*"><br/>
+
+  <div style="display:flex; gap:1rem; margin-top:1rem;">
+    <div>
+      <h3>元画像</h3>
+      <div id="dropzone" class="dropzone">
+        <canvas id="canvasIn"></canvas>
+        <div>ここに画像をドラッグ＆ドロップ</div>
+      </div>
+    </div>
+    <div>
+      <h3>フィルタ後</h3>
+      <div class="canvas-container">
+        <canvas id="canvasOut"></canvas>
+        <div id="loader" class="loader"></div>
+        <div style="text-align: center;">
+          <a id="downloadBtn" class="download-btn" href="#" download="filtered_image.png">ダウンロード</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:1rem;">
+    <label><input type="radio" name="mode" value="HSV" checked> HSV モード</label>
+    <label><input type="radio" name="mode" value="RGB"> RGB モード</label>
+  </div>
+
+  <div class="controls">
+    <div class="control-group" id="hsvControls">
+      <h4>HSV パラメータ</h4>
+      <label>Saturation Scale (a): <span id="satScaleVal">0.7</span>
+        <input type="range" id="satScale" min="0" max="1" step="0.01" value="0.7">
+      </label>
+      <label>V_min: <span id="vMinVal">0.05</span>
+        <input type="range" id="vMin" min="0" max="1" step="0.01" value="0.05">
+      </label>
+      <label>V_max: <span id="vMaxVal">0.90</span>
+        <input type="range" id="vMax" min="0" max="1" step="0.01" value="0.90">
+      </label>
+      <label>Gamma (HSV): <span id="gammaHSVVal">1.1</span>
+        <input type="range" id="gammaHSV" min="0.5" max="2.0" step="0.01" value="1.1">
+      </label>
+    </div>
+
+    <div class="control-group" id="rgbControls" style="display:none;">
+      <h4>RGB パラメータ</h4>
+      <label>Contrast (k): <span id="contrastVal">0.8</span>
+        <input type="range" id="contrast" min="0" max="2" step="0.01" value="0.8">
+      </label>
+      <label>Brightness Offset (o): <span id="brightOffVal">0.0</span>
+        <input type="range" id="brightOff" min="-0.5" max="0.5" step="0.01" value="0.0">
+      </label>
+      <label>Gamma (RGB): <span id="gammaRGBVal">1.1</span>
+        <input type="range" id="gammaRGB" min="0.5" max="2.0" step="0.01" value="1.1">
+      </label>  </div>
+  </div>
+
+  <script type="module" src="/src/app.ts"></script>
+</body>
+</html>
