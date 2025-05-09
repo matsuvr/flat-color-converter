@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Flat Color Filter</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <!-- KaTeX for TeX-style math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -108,19 +111,35 @@
       margin: 0 0 1rem 0;
       color: var(--md-sys-color-on-surface);
     }
-    
-    .image-container {
+      .image-container {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(2, 1fr);
       gap: 1.5rem;
       margin: 1.5rem 0;
-    }
-    
-    canvas { 
+    }canvas { 
       border: 1px solid var(--md-sys-color-outline-variant); 
       border-radius: 8px;
       max-width: 100%; 
+      height: auto;
       background-color: #f5f5f5;
+      display: block;
+    }
+    
+    .canvas-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 300px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* フィルタ前後の画像サイズを揃える */
+    #canvasIn, #canvasOut {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
     }
     
     .controls { 
@@ -210,8 +229,7 @@
       color: var(--md-sys-color-on-surface);
       cursor: pointer;
     }
-    
-    .dropzone { 
+      .dropzone { 
       position: relative; 
       border: 2px dashed var(--md-sys-color-outline);
       border-radius: 16px;
@@ -220,6 +238,9 @@
       transition: all 0.3s ease;
       cursor: pointer;
       background-color: var(--md-sys-color-surface);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
     }
     
     .dropzone-message {
@@ -313,12 +334,12 @@
       align-items: center;
       margin-bottom: 1rem;
     }
-    
-    .canvas-container {
+      .canvas-container {
       position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
+      width: 100%;
     }
     
     .slider-value {
@@ -346,30 +367,39 @@
     </div>
   </div>
   <!-- 数式表示エリア -->
-  <div class="card" id="formulaArea" style="margin-top:2rem; font-size:1.05rem;"></div>
+  <div class="container">
+    <div class="card" id="formulaArea" style="margin-top:2rem; font-size:1.05rem; padding: 1.5rem;">
+      <div style="text-align: center;">
+        <span class="material-symbols-outlined">functions</span> 
+        <span>数式の読み込み中...</span>
+      </div>
+    </div>
+  </div>
   <div class="container">
     <div class="card">
       <p>HSV／RGBモードのパラメータをスライダーで調整できます。画像は「元画像」エリアにドラッグ＆ドロップで読み込めます。</p>
-    </div>
-
-    <div class="image-container">
+    </div>    <div class="image-container">
       <div class="card">
         <h3 class="card-title">元画像</h3>
         <div id="dropzone" class="dropzone">
-          <canvas id="canvasIn"></canvas>
-          <div class="dropzone-message">
-            <span class="material-symbols-outlined">file_upload</span>
-            <div>ここに画像をドラッグ＆ドロップ</div>
+          <div class="canvas-wrapper">
+            <canvas id="canvasIn"></canvas>
+            <div class="dropzone-message">
+              <span class="material-symbols-outlined">file_upload</span>
+              <div>ここに画像をドラッグ＆ドロップ</div>
+            </div>
           </div>
         </div>
       </div>
       
       <div class="card">
         <h3 class="card-title">フィルタ後</h3>
-        <div class="canvas-container">
-          <canvas id="canvasOut"></canvas>
-          <div id="loader" class="loader"></div>
-          <div style="text-align: center;">
+        <div class="dropzone"> <!-- 元画像と同じ構造に変更 -->
+          <div class="canvas-wrapper">
+            <canvas id="canvasOut"></canvas>
+            <div id="loader" class="loader"></div>
+          </div>
+          <div style="text-align: center; margin-top: 10px;">
             <a id="downloadBtn" class="download-btn" href="#" download="filtered_image.png">
               <span class="material-symbols-outlined" style="font-size: 18px;">download</span>
               ダウンロード

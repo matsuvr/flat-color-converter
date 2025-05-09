@@ -14,6 +14,52 @@ const resetRGBBtn = document.getElementById('resetRGB') as HTMLButtonElement;
 const modeRadios  = document.getElementsByName('mode') as NodeListOf<HTMLInputElement>;
 const hsvGroup    = document.getElementById('hsvControls')!;
 const rgbGroup    = document.getElementById('rgbControls')!;
+// 数式表示エリア
+const formulaArea = document.getElementById('formulaArea')!;
+
+function updateFormula() {
+  // HTML形式で数式を直接構築する（KaTeX使用なし）
+  if (mode === 'HSV') {
+    // HSV数式
+    const a = satScale.value;
+    const Bmin = vMin.value;
+    const Bmax = vMax.value;
+    const gamma = gammaHSV.value;
+    
+    formulaArea.innerHTML = `
+      <h3 style="margin-top:0">HSB（HSV）空間での変換式</h3>
+      <div style="font-family: 'Noto Sans JP', sans-serif; line-height: 2; font-size: 1.1rem;">
+        <div>H' = H （色相はそのまま）</div>
+        <div>S' = clamp(<span style="background-color:#e3f6f5;padding:2px 5px;border-radius:3px;">${a}</span> × S, 0, 1)</div>
+        <div>B<sub>1</sub> = clamp(B, <span style="background-color:#ffeded;padding:2px 5px;border-radius:3px;">${Bmin}</span>, <span style="background-color:#e3eefa;padding:2px 5px;border-radius:3px;">${Bmax}</span>)</div>
+        <div>B<sub>2</sub> = ((B<sub>1</sub> - <span style="background-color:#ffeded;padding:2px 5px;border-radius:3px;">${Bmin}</span>) / (<span style="background-color:#e3eefa;padding:2px 5px;border-radius:3px;">${Bmax}</span> - <span style="background-color:#ffeded;padding:2px 5px;border-radius:3px;">${Bmin}</span>))<sup><span style="background-color:#e3eee6;padding:2px 5px;border-radius:3px;">${gamma}</span></sup></div>
+        <div>B' = <span style="background-color:#ffeded;padding:2px 5px;border-radius:3px;">${Bmin}</span> + (<span style="background-color:#e3eefa;padding:2px 5px;border-radius:3px;">${Bmax}</span> - <span style="background-color:#ffeded;padding:2px 5px;border-radius:3px;">${Bmin}</span>) × B<sub>2</sub></div>        <div style="margin-top:1em; display:flex; flex-wrap:wrap; gap:10px; font-size:0.95rem; color:#333;">
+          <div><span style="background-color:#e3f6f5;padding:2px 5px;border-radius:3px;">a</span>: 飽和度スケール</div>
+          <div><span style="background-color:#ffeded;padding:2px 5px;border-radius:3px;">B<sub>min</sub></span>: 明るさ下限</div>
+          <div><span style="background-color:#e3eefa;padding:2px 5px;border-radius:3px;">B<sub>max</sub></span>: 明るさ上限</div>
+          <div><span style="background-color:#e3eee6;padding:2px 5px;border-radius:3px;">γ</span>: ガンマ</div>
+          <div><span style="background-color:#f2f2f2;padding:2px 5px;border-radius:3px;">H,S,B</span>: 色相, 彩度, 明度</div>
+        </div>
+      </div>
+    `;
+  } else {
+    // RGB数式
+    const k = contrast.value;
+    const o = brightOff.value;
+    const gamma = gammaRGB.value;
+    
+    formulaArea.innerHTML = `      <h3 style="margin-top:0">RGB空間での変換式</h3>
+      <div style="font-family: 'Noto Sans JP', sans-serif; line-height: 2; font-size: 1.1rem;">
+        <div>C' = clamp(((C - 0.5) × <span style="background-color:#e3f6f5;padding:2px 5px;border-radius:3px;">${k}</span> + 0.5 + <span style="background-color:#ffeded;padding:2px 5px;border-radius:3px;">${o}</span>), 0, 1)<sup><span style="background-color:#e3eee6;padding:2px 5px;border-radius:3px;">${gamma}</span></sup></div>
+        <div style="margin-top:1em; display:flex; flex-wrap:wrap; gap:10px; font-size:0.95rem; color:#333;">
+          <div><span style="background-color:#e3f6f5;padding:2px 5px;border-radius:3px;">k</span>: コントラスト</div>
+          <div><span style="background-color:#ffeded;padding:2px 5px;border-radius:3px;">o</span>: 明るさオフセット</div>
+          <div><span style="background-color:#e3eee6;padding:2px 5px;border-radius:3px;">γ</span>: ガンマ</div>
+          <div><span style="background-color:#f2f2f2;padding:2px 5px;border-radius:3px;">C</span>: 各色成分（R, G, B値）</div>
+        </div>
+      </div>    `;
+  }
+}
 
 // HSV controls
 const satScale    = document.getElementById('satScale')   as HTMLInputElement;
@@ -60,11 +106,29 @@ function loadImageFromFile(file: File) {
   const url = URL.createObjectURL(file);
   originalImage = new Image();
   originalImage.onload = () => {
-    canvasIn.width  = originalImage.width;
-    canvasIn.height = originalImage.height;
-    canvasOut.width  = originalImage.width;
-    canvasOut.height = originalImage.height;
-    ctxIn.drawImage(originalImage, 0, 0);
+    // キャンバスサイズを画像サイズに合わせる
+    const width = originalImage.width;
+    const height = originalImage.height;
+    
+    // 両方のキャンバスに同じサイズを設定
+    canvasIn.width = width;
+    canvasIn.height = height;
+    canvasOut.width = width;
+    canvasOut.height = height;
+
+    // サイズが同じになるよう調整
+    const aspectRatio = width / height;
+    
+    // スタイル属性の設定を省略（CSSで制御）
+    
+    // dropzoneメッセージを非表示に
+    const dropzoneMessage = document.querySelector('.dropzone-message');
+    if (dropzoneMessage) {
+      (dropzoneMessage as HTMLElement).style.display = 'none';
+    }
+    
+    // 画像を描画
+    ctxIn.drawImage(originalImage, 0, 0, width, height);
     applyFilter();
   };
   originalImage.src = url;
@@ -108,6 +172,7 @@ modeRadios.forEach(r => {
       mode = r.value as any;
       hsvGroup.style.display = mode === 'HSV' ? 'block' : 'none';
       rgbGroup.style.display = mode === 'RGB' ? 'block' : 'none';
+      updateFormula();
       applyFilter();
     }
   });
@@ -127,19 +192,17 @@ let debounceTimer: number | null = null;
       case 'brightOff': brightOffVal.textContent = slider.value; break;
       case 'gammaRGB': gammaRGBVal.textContent = slider.value; break;
     }
-    
+    updateFormula();
     // ローディング表示
     loader.style.display = 'block';
-    
     // 即時フィルタ適用のためのデバウンス処理
     if (debounceTimer !== null) {
       window.clearTimeout(debounceTimer);
     }
-    
     debounceTimer = window.setTimeout(() => {
       applyFilter();
       debounceTimer = null;
-    }, 10); // 10ミリ秒のデバウンス（ほぼ即時だが、連続入力時に過剰な処理を防ぐ）
+    }, 10);
   });
 });
 
@@ -150,13 +213,12 @@ resetHSVBtn.addEventListener('click', () => {
   vMin.value = DEFAULT_VALUES.HSV.vMin.toString();
   vMax.value = DEFAULT_VALUES.HSV.vMax.toString();
   gammaHSV.value = DEFAULT_VALUES.HSV.gammaHSV.toString();
-  
   // 値表示の更新
   satScaleVal.textContent = satScale.value;
   vMinVal.textContent = vMin.value;
   vMaxVal.textContent = vMax.value;
   gammaHSVVal.textContent = gammaHSV.value;
-  
+  updateFormula();
   // フィルタを再適用
   applyFilter();
 });
@@ -166,12 +228,11 @@ resetRGBBtn.addEventListener('click', () => {
   contrast.value = DEFAULT_VALUES.RGB.contrast.toString();
   brightOff.value = DEFAULT_VALUES.RGB.brightOff.toString();
   gammaRGB.value = DEFAULT_VALUES.RGB.gammaRGB.toString();
-  
   // 値表示の更新
   contrastVal.textContent = contrast.value;
   brightOffVal.textContent = brightOff.value;
   gammaRGBVal.textContent = gammaRGB.value;
-  
+  updateFormula();
   // フィルタを再適用
   applyFilter();
 });
@@ -182,12 +243,20 @@ if (window.Worker) {
   filterWorker = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
 }
 
+// 初期表示
+// DOMContentLoadedイベントで初期化
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM fully loaded');
+  // すぐに数式を表示
+  updateFormula();
+});
+
 // フィルタ適用
 function applyFilter() {
   if (!originalImage || !filterWorker) return;
 
   loader.style.display = 'block';
-  ctxIn.drawImage(originalImage, 0, 0);
+  ctxIn.drawImage(originalImage, 0, 0, canvasIn.width, canvasIn.height);
   const imgData = ctxIn.getImageData(0, 0, canvasIn.width, canvasIn.height);
 
   // パラメータ取得
@@ -211,6 +280,15 @@ if (filterWorker) {
   filterWorker.onmessage = function (e) {
     const { imageData } = e.data;
     ctxOut.putImageData(imageData, 0, 0);
+    
+    // キャンバスの描画領域が同じになるように明示的に再描画
+    const width = canvasIn.width;
+    const height = canvasIn.height;
+    const tempData = ctxOut.getImageData(0, 0, width, height);
+    ctxOut.canvas.width = width;
+    ctxOut.canvas.height = height;
+    ctxOut.putImageData(tempData, 0, 0);
+    
     // ダウンロードボタンのURLを更新
     const dataURL = canvasOut.toDataURL('image/png');
     downloadBtn.href = dataURL;
